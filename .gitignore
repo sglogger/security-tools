@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+._*
+
+# Editoren / IDEs
+.vscode/
+.idea/
+*.swp
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Umgebungen / Secrets
+.env
+.env.*
+!.env.example
+
+# Scan-Ergebnisse (können interne Pfade, Hostnamen und Schwachstellen enthalten)
+report*.json
+*.report.json
+reports/
+*.log
