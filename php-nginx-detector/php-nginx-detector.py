@@ -17,7 +17,8 @@ PHP_FIXED = {"8.2": "8.2.36", "8.3": "8.3.37", "8.4": "8.4.28", "8.5": "8.5.13"}
 NGINX_FIXED = {"1.30": "1.30.7", "1.31": "1.31.9"}
 DEFAULT_ROOTS = ("~/SourceCode", "/data/docker-containers")
 SKIP = {".git", ".venv", "venv", "vendor", "node_modules", "build",
-        "dist", "__pycache__", "cache", "logs", "uploads"}
+        "dist", "__pycache__", "cache", "logs", "uploads",
+        "volumes", "volume", "data", "db", "database", "storage", "backups"}
 APPS = {"wordpress", "drupal", "joomla", "nextcloud", "matomo",
         "phpmyadmin", "mediawiki", "typo3", "moodle", "glpi"}
 PRIORITY = {"AFFECTED": 0, "EOL": 1, "UNPINNED": 2,
@@ -176,23 +177,35 @@ def sources(roots, max_depth, deep):
                                  base, None, "Pfad nicht lesbar"))
             continue
         base = base.resolve()
-        for folder, dirs, files in os.walk(str(base), followlinks=False):
+        def on_walk_error(exc):
+            # Unreadable data/volume directories must never abort the audit.
+            sys.stderr.write("WARN: Verzeichnis übersprungen: %s\n" % exc)
+
+        for folder, dirs, files in os.walk(str(base), followlinks=False,
+                                           onerror=on_walk_error):
             depth = len(Path(folder).relative_to(base).parts)
-            dirs[:] = sorted(d for d in dirs if d not in SKIP
-                             and (deep or not d.startswith("."))
-                             and not Path(folder, d).is_symlink())
-            if depth >= max_depth:
-                dirs[:] = []
+            accessible = []
+            for name in sorted(dirs):
+                if name in SKIP or (not deep and name.startswith(".")):
+                    continue
+                try:
+                    if not Path(folder, name).is_symlink():
+                        accessible.append(name)
+                except OSError as exc:
+                    sys.stderr.write("WARN: Verzeichnis übersprungen: %s\n" % exc)
+            dirs[:] = accessible if depth < max_depth else []
             env = load_env(Path(folder))
             unit = Path(folder).name
             for name in sorted(files):
-                path = Path(folder, name)
-                if path.is_symlink() or not (DOCKERFILE.match(name) or COMPOSE.match(name)):
+                # Match names first: never stat arbitrary files in mounted volumes.
+                if not (DOCKERFILE.match(name) or COMPOSE.match(name)):
                     continue
+                path = Path(folder, name)
                 try:
-                    if path.stat().st_size > 2_000_000:
+                    if path.is_symlink() or path.stat().st_size > 2_000_000:
                         continue
-                except OSError:
+                except OSError as exc:
+                    sys.stderr.write("WARN: Datei übersprungen: %s\n" % exc)
                     continue
                 if path in seen:
                     continue
