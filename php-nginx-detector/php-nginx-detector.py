@@ -308,7 +308,11 @@ def main(argv=None):
     parser.add_argument("-v", "--verbose", action="store_true", help="Auch OK und INFO anzeigen")
     parser.add_argument("--no-color", action="store_true", help="Kompatibilitätsoption")
     args = parser.parse_args(argv)
-    roots = args.paths or [r for r in DEFAULT_ROOTS if Path(r).expanduser().is_dir()]
+    # --docker alone is runtime-only. Supplying paths explicitly combines
+    # source and runtime scans. Without --docker, use existing default roots.
+    roots = (args.paths if args.paths else
+             ([] if args.docker else
+              [r for r in DEFAULT_ROOTS if Path(r).expanduser().is_dir()]))
     if not roots and not args.docker:
         parser.error("Keine Roots gefunden: Verzeichnis angeben oder --docker")
     scan, n = sources(roots, max(0, args.max_depth), args.deep)
