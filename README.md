@@ -13,6 +13,7 @@ Die Tools sind bewusst schlank gehalten:
 | Tool | Zweck |
 |------|-------|
 | [2shell-detector](2shell-detector/) | Findet verwundbare PHP-, Node.js-, Bun- und Brotli-Versionen (PHP2Shell, CVE-2026-109618/-109619; Node2Shell/HTTP2Shell, CVE-2026-111497) in Repos und laufenden Docker-Containern. |
+| [php-nginx-detector](php-nginx-detector/) | Prüft PHP-/NGINX-Sicherheitsreleases in Dockerfiles, Compose-Dateien und optional laufenden Containern; JSON-Ausgabe für `jq`, Distro-Backports als `REVIEW`. |
 
 Jedes Tool liegt in einem eigenen Ordner mit eigenem README (Verwendung, Optionen, Beispielausgabe).
 
