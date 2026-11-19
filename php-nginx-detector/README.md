@@ -30,7 +30,7 @@ chmod +x php-nginx-detector.py
 | `paths …` | Beliebige Root-Verzeichnisse; ohne Angabe `~/SourceCode` und `/data/docker-containers`, soweit vorhanden |
 | `--docker` | Alle laufenden Container zur Laufzeit prüfen (`docker ps/inspect/exec`) |
 | `--docker-bin X` | Container-CLI, standardmässig `docker` |
-| `--deep` | Auch versteckte Unterordner berücksichtigen |
+| `--deep` | Auch versteckte Unterordner berücksichtigen; Daten-/Volume-Verzeichnisse bleiben ausgeschlossen |
 | `--max-depth N` | Maximale Scan-Tiefe, standardmässig 8 |
 | `-v`, `--verbose` | Auch `OK` und `INFO` ausgeben |
 | `--json` | JSON auf stdout |
@@ -85,6 +85,10 @@ Exit-Code `0`: keine offenen Befunde; `1`: `UNPINNED`/`REVIEW`; `2`: `AFFECTED`/
 ```
 
 Die JSON-Ausgabe enthält `generated`, `rules_updated`, `source_files`, `containers`, `summary` und `findings`. Ein Finding enthält unter anderem `unit`, `kind`, `component`, `version`, `status`, `file`, `line`, `detail` und bei Runtime-Befunden `image`/`compose_dir`.
+
+## Berechtigungen und Volume-Verzeichnisse
+
+Verzeichnisse wie `volumes/`, `storage/`, `data/`, `db/` und `backups/` werden standardmässig nicht rekursiv untersucht. Unlesbare Dateien oder Verzeichnisse werden mit `WARN` auf stderr übersprungen; sie beenden den Scan nicht. Den Scanner für den Source-Code-Scan normalerweise **ohne sudo** ausführen. Container-Zugriff über `--docker` benötigt die üblichen Docker-Berechtigungen.
 
 ## Grenzen
 
