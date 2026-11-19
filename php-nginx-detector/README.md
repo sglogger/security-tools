@@ -16,8 +16,8 @@ chmod +x php-nginx-detector.py
 ```bash
 ./php-nginx-detector.py                                      # Default-Roots, falls vorhanden
 ./php-nginx-detector.py /data/docker-containers              # Statische Analyse
-./php-nginx-detector.py ~/SourceCode /data/docker-containers --docker
-./php-nginx-detector.py --docker                             # Alle laufenden Container
+./php-nginx-detector.py ~/SourceCode /data/docker-containers --docker # Statisch + Runtime
+./php-nginx-detector.py --docker                             # Nur laufende Container (kein Dateisystemscan)
 ./php-nginx-detector.py /data/docker-containers --docker -v  # Auch OK/INFO
 ./php-nginx-detector.py --docker --json > report.json
 ./php-nginx-detector.py --docker --json | jq '.findings[] | select(.status=="AFFECTED" or .status=="EOL")'
@@ -28,7 +28,7 @@ chmod +x php-nginx-detector.py
 | Option | Bedeutung |
 |---|---|
 | `paths …` | Beliebige Root-Verzeichnisse; ohne Angabe `~/SourceCode` und `/data/docker-containers`, soweit vorhanden |
-| `--docker` | Alle laufenden Container zur Laufzeit prüfen (`docker ps/inspect/exec`) |
+| `--docker` | Ohne Pfade: ausschliesslich laufende Container prüfen (`docker ps/inspect/exec`); mit Pfaden: statisch + Runtime |
 | `--docker-bin X` | Container-CLI, standardmässig `docker` |
 | `--deep` | Auch versteckte Unterordner berücksichtigen; Daten-/Volume-Verzeichnisse bleiben ausgeschlossen |
 | `--max-depth N` | Maximale Scan-Tiefe, standardmässig 8 |
@@ -87,6 +87,8 @@ Exit-Code `0`: keine offenen Befunde; `1`: `UNPINNED`/`REVIEW`; `2`: `AFFECTED`/
 Die JSON-Ausgabe enthält `generated`, `rules_updated`, `source_files`, `containers`, `summary` und `findings`. Ein Finding enthält unter anderem `unit`, `kind`, `component`, `version`, `status`, `file`, `line`, `detail` und bei Runtime-Befunden `image`/`compose_dir`.
 
 ## Berechtigungen und Volume-Verzeichnisse
+
+Beim Aufruf **`--docker` ohne explizite Pfade** wird kein Source- oder Volume-Verzeichnis auf dem Host durchlaufen. Ein statischer Scan findet nur ohne `--docker` oder mit explizit angegebenen Pfaden statt.
 
 Verzeichnisse wie `volumes/`, `storage/`, `data/`, `db/` und `backups/` werden standardmässig nicht rekursiv untersucht. Unlesbare Dateien oder Verzeichnisse werden mit `WARN` auf stderr übersprungen; sie beenden den Scan nicht. Den Scanner für den Source-Code-Scan normalerweise **ohne sudo** ausführen. Container-Zugriff über `--docker` benötigt die üblichen Docker-Berechtigungen.
 
